@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prodeje podle skupin — Diamond Plus</title>
+<style>
+:root {
+  --brand: #5C2450;
+  --brand-light: #7a3a6c;
+  --brand-dark: #3e1836;
+  --accent: #e6a817;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --text: #1e1e2f;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --sidebar-w: 260px;
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #0f1117;
+  --card: #1a1c25;
+  --text: #e4e4e7;
+  --text-muted: #9ca3af;
+  --border: #2d2f3a;
+  --brand-light: #9b6490;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: linear-gradient(180deg, var(--brand-dark) 0%, var(--brand) 100%);
+  color: #fff;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transition: transform .3s ease;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.sidebar-logo h2 { font-size: 16px; font-weight: 700; letter-spacing: .5px; }
+.sidebar-logo span { font-size: 11px; opacity: .65; display: block; margin-top: 2px; }
+.sidebar-nav { padding: 4px 0; flex: 1; }
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 24px;
+  color: rgba(255,255,255,.75);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all .2s;
+}
+.sidebar-nav a:hover, .sidebar-nav a.active {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  border-left-color: var(--accent);
+}
+.sidebar-nav a svg { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255,255,255,.12);
+  margin: 6px 24px;
+}
+.sidebar-footer {
+  padding: 18px 24px;
+  border-top: 1px solid rgba(255,255,255,.12);
+  font-size: 11px; opacity: .5;
+}
+/* HAMBURGER */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 200;
+  background: var(--brand);
+  border: none;
+  color: #fff;
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
+}
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 90;
+}
+/* MAIN */
+.main {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  padding: 32px 40px;
+  max-width: calc(100vw - 260px);
+  overflow-x: hidden;
+}
+/* HEADER */
+.header { margin-bottom: 32px; }
+.header h1 { font-size: 26px; font-weight: 700; color: var(--brand); }
+[data-theme="dark"] .header h1 { color: var(--brand-light); }
+.header .period { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+.theme-toggle {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 6px;
+}
+/* KPI CARDS */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 32px;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 4px; height: 100%;
+}
+.kpi-card.purple::before { background: var(--brand); }
+.kpi-card.gold::before { background: var(--accent); }
+.kpi-card.green::before { background: var(--success); }
+.kpi-card.blue::before { background: var(--info); }
+.kpi-card.red::before { background: var(--danger); }
+.kpi-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .7px; font-weight: 600; }
+.kpi-value { font-size: 32px; font-weight: 800; margin: 6px 0 2px; }
+.kpi-sub { font-size: 12.5px; color: var(--text-muted); }
+/* SECTION */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+}
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title svg { width: 20px; height: 20px; color: var(--brand); }
+/* DONUT */
+.donut-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+.donut-stats { min-width: 200px; }
+.donut-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  gap: 12px;
+}
+.donut-stat:last-child { border-bottom: none; }
+.donut-stat .dot {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+.donut-stat-left { display: flex; align-items: center; flex: 1; }
+.donut-stat-right { font-weight: 700; white-space: nowrap; }
+.donut-stat-pct { font-size: 12px; color: var(--text-muted); margin-left: 6px; }
+/* PROGRESS BARS */
+.prog-row { margin: 10px 0; }
+.prog-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+.prog-track {
+  width: 100%;
+  height: 26px;
+  background: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex; align-items: center; padding-left: 10px;
+  color: #fff; font-size: 12px; font-weight: 600;
+  transition: width .8s ease;
+}
+/* TWO-COL */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+/* TABLE */
+.search-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.search-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+.filter-select {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.data-table thead th {
+  background: var(--brand);
+  color: #fff;
+  padding: 11px 14px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .3px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.data-table thead th:first-child { text-align: left; border-radius: 8px 0 0 0; }
+.data-table thead th:last-child { border-radius: 0 8px 0 0; }
+.data-table thead th:hover { background: var(--brand-light); }
+.data-table thead th .sort-icon { margin-left: 4px; opacity: .6; }
+.data-table thead th.sorted .sort-icon { opacity: 1; }
+.data-table tbody tr:nth-child(even) { background: rgba(92,36,80,.03); }
+[data-theme="dark"] .data-table tbody tr:nth-child(even) { background: rgba(255,255,255,.03); }
+.data-table tbody tr:hover { background: rgba(92,36,80,.07); }
+.data-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.data-table tbody td:first-child { text-align: left; font-weight: 600; }
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-purple { background: rgba(92,36,80,.12); color: var(--brand); }
+[data-theme="dark"] .badge-purple { background: rgba(155,100,144,.2); color: var(--brand-light); }
+.badge-gold { background: rgba(230,168,23,.15); color: #b87c0b; }
+.badge-blue { background: rgba(59,130,246,.12); color: #2563eb; }
+.badge-green { background: rgba(34,197,94,.12); color: #16a34a; }
+.badge-gray { background: rgba(107,114,128,.12); color: var(--text-muted); }
+/* OVERLAP SECTION */
+.overlap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.overlap-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.overlap-card h4 { font-size: 13.5px; font-weight: 700; margin-bottom: 12px; }
+.overlap-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.overlap-item:last-child { border-bottom: none; }
+/* CHART SVG */
+.chart-wrap { overflow-x: auto; }
+/* TOOLTIP */
+.tooltip {
+  position: fixed;
+  background: var(--text);
+  color: var(--bg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity .15s;
+  max-width: 220px;
+}
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .hamburger { display: flex; }
+  .overlay.show { display: block; }
+  .main { margin-left: 0; max-width: 100vw; padding: 72px 20px 24px; }
+  .two-col { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h2>Diamond Plus</h2>
+    <span>Analytický portál</span>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Portál
+    </a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      Hospodaření
+    </a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Obaly
+    </a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 17H2a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h20a3 3 0 0 0-3 3v5a3 3 0 0 0 3 3z"/><path d="M2 17l1 4h18l1-4"/></svg>
+      Expedice
+    </a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      Přepravci
+    </a>
+    <div class="sidebar-divider"></div>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      E-shop
+    </a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><rect x="7" y="1" width="10" height="4" rx="1" ry="1"/></svg>
+      Sklad
+    </a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      Balíčky
+    </a>
+    <a href="#" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      👥 Skupiny
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    WPJ Shop API · 2026
+  </div>
+</nav>
+
+<main class="main">
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <h1>Prodeje podle skupin</h1>
+        <div class="period">Q1 2026 + duben &nbsp;·&nbsp; Zdroj: WPJ Shop API &nbsp;·&nbsp; Celkem <strong>34 861</strong> objednávek</div>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙 Tmavý režim</button>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card purple">
+      <div class="kpi-label">Celkové tržby 2026</div>
+      <div class="kpi-value">50,6 M</div>
+      <div class="kpi-sub">34 861 aktivních objednávek</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Největší skupina</div>
+      <div class="kpi-value">Partner</div>
+      <div class="kpi-sub">46,9 M Kč · 92,8 % tržeb</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Podíl partnerů</div>
+      <div class="kpi-value">92,8 %</div>
+      <div class="kpi-sub">31 866 objednávek partnerů</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Průměrná objednávka</div>
+      <div class="kpi-value">1 452 Kč</div>
+      <div class="kpi-sub">Partner 1 473 · Retail 1 313 · Host 1 095</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Stornované objednávky</div>
+      <div class="kpi-value">1 044</div>
+      <div class="kpi-sub">2,9 % ze 35 905 celkových</div>
+    </div>
+  </div>
+
+  <!-- DONUT + MONTHLY STACKED -->
+  <div class="two-col">
+    <!-- DONUT CHART -->
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+        Rozložení tržeb podle skupin
+      </div>
+      <div class="donut-wrapper">
+        <svg id="donutSvg" width="200" height="200" viewBox="0 0 200 200"></svg>
+        <div class="donut-stats" id="donutStats"></div>
+      </div>
+    </div>
+
+    <!-- MONTHLY STACKED BAR -->
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" opacity=".3"/><rect x="5" y="11" width="3" height="6" fill="currentColor" rx="1"/><rect x="11" y="7" width="3" height="10" fill="currentColor" rx="1"/><rect x="16" y="9" width="3" height="8" fill="currentColor" rx="1"/></svg>
+        Měsíční tržby podle skupin
+      </div>
+      <div class="chart-wrap">
+        <canvas id="stackedBar" width="420" height="260"></canvas>
+      </div>
+      <div class="legend" id="barLegend"></div>
+    </div>
+  </div>
+
+  <!-- MAIN TABLE -->
+  <div class="section">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Přehled primárních skupin zákazníků
+    </div>
+    <table class="data-table" id="primaryTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable('primaryTable',0)" class="sorted">Skupina <span class="sort-icon">▲</span></th>
+          <th onclick="sortTable('primaryTable',1)">Objednávky <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('primaryTable',2)">Tržby (Kč) <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('primaryTable',3)">Průměr / obj <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('primaryTable',4)">% tržeb <span class="sort-icon">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="primaryTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- USER GROUPS TABLE -->
+  <div class="section">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Detailní přehled uživatelských skupin
+    </div>
+    <div class="search-row">
+      <input type="text" class="search-input" id="ugSearch" placeholder="🔍  Hledat skupinu..." oninput="filterUGTable()">
+      <select class="filter-select" id="ugSort" onchange="renderUGTable()">
+        <option value="revenue">Řadit: Tržby ↓</option>
+        <option value="orders">Řadit: Objednávky ↓</option>
+        <option value="avg">Řadit: Průměr ↓</option>
+        <option value="name">Řadit: Název A-Z</option>
+      </select>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="text-align:left;">Skupina</th>
+          <th>Objednávky</th>
+          <th>Tržby (Kč)</th>
+          <th>Průměr / obj</th>
+          <th>% celk. tržeb</th>
+          <th style="min-width:160px;">Podíl</th>
+        </tr>
+      </thead>
+      <tbody id="ugTableBody"></tbody>
+    </table>
+    <div style="margin-top:12px;font-size:12px;color:var(--text-muted);">
+      ℹ️ Skupiny nejsou výhradně: jeden zákazník může být ve více skupinách současně. % je vztaženo k celkovým tržbám (50,6 M Kč).
+    </div>
+  </div>
+
+  <!-- PROGRESS BARS OVERLAP -->
+  <div class="section">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Vizuální porovnání skupin — tržby
+    </div>
+    <div id="progressBars"></div>
+  </div>
+
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const TOTAL_REV = 50601682;
+const TOTAL_ORDERS = 34861;
+
+const primaryGroups = [
+  { name: 'Partner (35% sleva)', orders: 31866, revenue: 46950730, badge: 'badge-purple' },
+  { name: 'Běžný zákazník',      orders: 1704,  revenue: 2237923,  badge: 'badge-blue' },
+  { name: 'Neregistrovaný',      orders: 1291,  revenue: 1413029,  badge: 'badge-gray' },
+];
+
+const userGroups = [
+  { name: 'TiandeID',                    id: 4,    orders: 32057, revenue: 47306186 },
+  { name: 'Sleva 35%',                   id: 1,    orders: 31866, revenue: 46950730 },
+  { name: 'Kurz hubnutí',                id: 6008, orders: 5403,  revenue: 9153469 },
+  { name: 'Kurz hubnutí 2',              id: 6338, orders: 3240,  revenue: 5717833 },
+  { name: 'Tělo jako kompas 1',          id: 6486, orders: 3067,  revenue: 5294397 },
+  { name: 'Odběr novinek',               id: 5,    orders: 2661,  revenue: 3948043 },
+  { name: 'Hlídací pes',                 id: 10,   orders: 1850,  revenue: 2560498 },
+  { name: 'Odesílat email o prodejích',  id: 6,    orders: 248,   revenue: 347541 },
+  { name: 'Partner',                     id: null, orders: 122,   revenue: 230848 },
+  { name: 'Duplicity',                   id: 618,  orders: 109,   revenue: 147153 },
+];
+
+const months = ['2026-01','2026-02','2026-03','2026-04'];
+const monthLabels = ['Leden','Únor','Březen','Duben'];
+const monthlyData = {
+  'Partner (35% sleva)': [13536047, 13850719, 16471630, 3092333],
+  'Běžný zákazník':      [706292,   624219,   709132,   198281],
+  'Neregistrovaný':      [416432,   429034,   471985,   95579],
+};
+
+const COLORS = {
+  'Partner (35% sleva)': '#5C2450',
+  'Běžný zákazník':      '#3b82f6',
+  'Neregistrovaný':      '#9ca3af',
+};
+const UG_COLORS = ['#5C2450','#7a3a6c','#e6a817','#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16'];
+
+// ─── DONUT CHART ──────────────────────────────────────────────────────────────
+function drawDonut() {
+  const svg = document.getElementById('donutSvg');
+  const cx = 100, cy = 100, R = 80, r = 52;
+  const total = primaryGroups.reduce((s,g) => s+g.revenue, 0);
+  let startAngle = -Math.PI/2;
+  const segments = [];
+
+  primaryGroups.forEach((g, i) => {
+    const frac = g.revenue / total;
+    const angle = frac * 2 * Math.PI;
+    const x1 = cx + R * Math.cos(startAngle);
+    const y1 = cy + R * Math.sin(startAngle);
+    const x2 = cx + R * Math.cos(startAngle + angle);
+    const y2 = cy + R * Math.sin(startAngle + angle);
+    const x3 = cx + r * Math.cos(startAngle + angle);
+    const y3 = cy + r * Math.sin(startAngle + angle);
+    const x4 = cx + r * Math.cos(startAngle);
+    const y4 = cy + r * Math.sin(startAngle);
+    const largeArc = angle > Math.PI ? 1 : 0;
+    const color = Object.values(COLORS)[i];
+    const d = `M${x1},${y1} A${R},${R} 0 ${largeArc} 1 ${x2},${y2} L${x3},${y3} A${r},${r} 0 ${largeArc} 0 ${x4},${y4} Z`;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', color);
+    path.style.cursor = 'pointer';
+    path.style.transition = 'opacity .2s';
+    path.addEventListener('mouseenter', () => { path.style.opacity = '.8'; });
+    path.addEventListener('mouseleave', () => { path.style.opacity = '1'; });
+    svg.appendChild(path);
+    startAngle += angle;
+  });
+
+  // Center text
+  const t1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t1.setAttribute('x','100'); t1.setAttribute('y','96');
+  t1.setAttribute('text-anchor','middle'); t1.setAttribute('font-size','13');
+  t1.setAttribute('font-weight','700'); t1.setAttribute('fill','currentColor');
+  t1.textContent = '50,6 M Kč';
+  svg.appendChild(t1);
+  const t2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t2.setAttribute('x','100'); t2.setAttribute('y','112');
+  t2.setAttribute('text-anchor','middle'); t2.setAttribute('font-size','10');
+  t2.setAttribute('fill','#9ca3af');
+  t2.textContent = 'celkem';
+  svg.appendChild(t2);
+
+  // Stats
+  const statsEl = document.getElementById('donutStats');
+  primaryGroups.forEach((g, i) => {
+    const pct = (g.revenue / total * 100).toFixed(1);
+    const color = Object.values(COLORS)[i];
+    statsEl.innerHTML += `
+      <div class="donut-stat">
+        <div class="donut-stat-left">
+          <div class="dot" style="background:${color}"></div>
+          <span>${g.name}</span>
+        </div>
+        <div>
+          <span class="donut-stat-right">${fmt(g.revenue)}</span>
+          <span class="donut-stat-pct">${pct}%</span>
+        </div>
+      </div>`;
+  });
+}
+
+// ─── STACKED BAR CHART (Canvas) ───────────────────────────────────────────────
+function drawStackedBar() {
+  const canvas = document.getElementById('stackedBar');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const padL = 64, padR = 20, padT = 16, padB = 36;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const maxVal = Math.max(...months.map((_,mi) =>
+    Object.values(monthlyData).reduce((s,arr) => s+arr[mi], 0)
+  ));
+  const niceMax = Math.ceil(maxVal / 5000000) * 5000000;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Y grid lines
+  const nLines = 5;
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e5e7eb';
+  ctx.lineWidth = 1;
+  for (let i=0; i<=nLines; i++) {
+    const y = padT + chartH - (i/nLines)*chartH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+chartW, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(fmtM(niceMax*i/nLines), padL-6, y+4);
+  }
+
+  const groups = Object.keys(monthlyData);
+  const barW = chartW / months.length;
+  const innerPad = 20;
+
+  months.forEach((_, mi) => {
+    let base = padT + chartH;
+    groups.forEach((g, gi) => {
+      const val = monthlyData[g][mi];
+      const bh = (val / niceMax) * chartH;
+      const x = padL + mi * barW + innerPad/2;
+      const bw = barW - innerPad;
+      ctx.fillStyle = Object.values(COLORS)[gi];
+      ctx.fillRect(x, base - bh, bw, bh);
+      base -= bh;
+    });
+    ctx.fillStyle = '#6b7280'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(monthLabels[mi], padL + mi*barW + barW/2, H - padB + 16);
+  });
+
+  // Legend
+  const legendEl = document.getElementById('barLegend');
+  groups.forEach((g, i) => {
+    const color = Object.values(COLORS)[i];
+    legendEl.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${color}"></div>${g}</div>`;
+  });
+}
+
+// ─── PRIMARY TABLE ─────────────────────────────────────────────────────────────
+function renderPrimaryTable() {
+  const tbody = document.getElementById('primaryTableBody');
+  primaryGroups.forEach(g => {
+    const pct = (g.revenue / TOTAL_REV * 100).toFixed(1);
+    const avg = Math.round(g.revenue / g.orders);
+    tbody.innerHTML += `
+      <tr>
+        <td><span class="badge ${g.badge}">${g.name}</span></td>
+        <td>${g.orders.toLocaleString('cs')}</td>
+        <td>${fmt(g.revenue)}</td>
+        <td>${avg.toLocaleString('cs')} Kč</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;">
+            <div style="width:80px;height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+              <div style="width:${pct}%;height:100%;background:${Object.values(COLORS)[primaryGroups.indexOf(g)]};border-radius:4px;"></div>
+            </div>
+            <strong>${pct}%</strong>
+          </div>
+        </td>
+      </tr>`;
+  });
+}
+
+// ─── UG TABLE ──────────────────────────────────────────────────────────────────
+let ugFilteredData = [...userGroups];
+
+function renderUGTable() {
+  const sortVal = document.getElementById('ugSort').value;
+  const search = document.getElementById('ugSearch').value.toLowerCase();
+  let data = userGroups.filter(g => g.name.toLowerCase().includes(search));
+
+  if (sortVal === 'revenue') data.sort((a,b) => b.revenue - a.revenue);
+  else if (sortVal === 'orders') data.sort((a,b) => b.orders - a.orders);
+  else if (sortVal === 'avg') data.sort((a,b) => (b.revenue/b.orders) - (a.revenue/a.orders));
+  else data.sort((a,b) => a.name.localeCompare(b.name,'cs'));
+
+  const tbody = document.getElementById('ugTableBody');
+  tbody.innerHTML = '';
+  data.forEach((g, i) => {
+    const pct = (g.revenue / TOTAL_REV * 100).toFixed(1);
+    const avg = Math.round(g.revenue / g.orders);
+    const color = UG_COLORS[i % UG_COLORS.length];
+    const barWidth = Math.min(100, parseFloat(pct));
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${g.name}</strong>${g.id ? ` <span style="font-size:11px;color:var(--text-muted);">#${g.id}</span>` : ''}</td>
+        <td>${g.orders.toLocaleString('cs')}</td>
+        <td>${fmt(g.revenue)}</td>
+        <td>${avg.toLocaleString('cs')} Kč</td>
+        <td><strong>${pct}%</strong></td>
+        <td>
+          <div style="width:100%;height:14px;background:var(--border);border-radius:4px;overflow:hidden;">
+            <div style="width:${barWidth}%;height:100%;background:${color};border-radius:4px;"></div>
+          </div>
+        </td>
+      </tr>`;
+  });
+}
+
+function filterUGTable() { renderUGTable(); }
+
+// ─── PROGRESS BARS ─────────────────────────────────────────────────────────────
+function renderProgressBars() {
+  const container = document.getElementById('progressBars');
+  const allGroups = [
+    ...primaryGroups.map(g => ({...g, color: COLORS[g.name]})),
+    ...userGroups.map((g,i) => ({...g, badge: null, color: UG_COLORS[i]}))
+  ].sort((a,b) => b.revenue - a.revenue);
+
+  // Deduplicate by name
+  const seen = new Set();
+  const unique = allGroups.filter(g => { if (seen.has(g.name)) return false; seen.add(g.name); return true; });
+
+  unique.forEach(g => {
+    const pct = (g.revenue / TOTAL_REV * 100).toFixed(1);
+    container.innerHTML += `
+      <div class="prog-row">
+        <div class="prog-label">
+          <span><strong>${g.name}</strong></span>
+          <span>${fmt(g.revenue)} · ${g.orders.toLocaleString('cs')} obj.</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" style="width:${Math.min(100,parseFloat(pct))}%;background:${g.color};">
+            ${parseFloat(pct) > 5 ? pct+'%' : ''}
+          </div>
+        </div>
+      </div>`;
+  });
+}
+
+// ─── TABLE SORT ────────────────────────────────────────────────────────────────
+let sortStates = {};
+function sortTable(tableId, colIdx) {
+  const table = document.getElementById(tableId);
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const key = tableId + '_' + colIdx;
+  sortStates[key] = !sortStates[key];
+  const asc = sortStates[key];
+
+  rows.sort((a, b) => {
+    const av = a.cells[colIdx].textContent.trim().replace(/[^\d.,]/g,'').replace(',','.') || a.cells[colIdx].textContent.trim();
+    const bv = b.cells[colIdx].textContent.trim().replace(/[^\d.,]/g,'').replace(',','.') || b.cells[colIdx].textContent.trim();
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+    return asc ? av.localeCompare(bv,'cs') : bv.localeCompare(av,'cs');
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+
+  table.querySelectorAll('th').forEach((th, i) => {
+    const icon = th.querySelector('.sort-icon');
+    if (i === colIdx) {
+      th.classList.add('sorted');
+      if (icon) icon.textContent = asc ? '▲' : '▼';
+    } else {
+      th.classList.remove('sorted');
+      if (icon) icon.textContent = '↕';
+    }
+  });
+}
+
+// ─── THEME ─────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? '' : 'dark');
+  document.querySelector('.theme-toggle').textContent = dark ? '🌙 Tmavý režim' : '☀️ Světlý režim';
+  // Redraw canvas
+  document.getElementById('stackedBar').getContext('2d').clearRect(0,0,420,260);
+  document.getElementById('barLegend').innerHTML = '';
+  drawStackedBar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+// ─── UTILS ─────────────────────────────────────────────────────────────────────
+function fmt(v) { return Math.round(v).toLocaleString('cs') + ' Kč'; }
+function fmtM(v) { return v >= 1000000 ? (v/1000000).toFixed(0)+'M' : (v/1000).toFixed(0)+'k'; }
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+drawDonut();
+drawStackedBar();
+renderPrimaryTable();
+renderUGTable();
+renderProgressBars();
+</script>
+</body>
+</html>
