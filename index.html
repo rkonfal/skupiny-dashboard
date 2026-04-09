@@ -387,14 +387,19 @@ body {
 }
   
 /* === MOBILE RESPONSIVE FIX === */
-@media (max-width: 1024px) {
-  .sidebar, aside[class*="sidebar"], nav[class*="sidebar"] {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 1000;
+@media (max-width: 1023px) {
+  #sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 256px !important;
+    height: 100vh !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
+    z-index: 1000 !important;
   }
-  .sidebar.open, aside.open, nav.open {
-    transform: translateX(0);
+  #sidebar.open {
+    transform: translateX(0) !important;
   }
   .main-content, .main, main,
   [style*="margin-left: 256px"], [style*="margin-left:256px"],
@@ -417,6 +422,11 @@ body {
   }
   .sidebar-overlay.open {
     display: block;
+  }
+}
+@media (min-width: 1024px) {
+  #sidebar {
+    transform: translateX(0) !important;
   }
 }
 .hamburger-btn {
@@ -966,13 +976,17 @@ renderProgressBars();
   // Sidebar (mobile)
   var sidebarOpen = false;
   function toggleSidebar() {
-    sidebarOpen = !sidebarOpen;
     const s = document.getElementById('sidebar');
     const o = document.getElementById('overlay');
-    if (sidebarOpen) {
-      s.style.transform = 'translateX(0)';
-      o.classList.remove('hidden');
+    const isOpen = s.classList.contains('open');
+    if (isOpen) {
+      s.classList.remove('open');
+      if (o) o.classList.add('hidden');
     } else {
+      s.classList.add('open');
+      if (o) o.classList.remove('hidden');
+    }
+  } else {
       s.style.transform = 'translateX(-100%)';
       o.classList.add('hidden');
     }
